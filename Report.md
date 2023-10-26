@@ -1,10 +1,10 @@
 # CSCE 435 Group project
 
 ## 1. Group members:
-1. First
-2. Second
-3. Third
-4. Fourth
+1. Justin Liu
+2. Sam Yang 
+3. Lucas Ma
+4. Tanya Trujillo
 
 ---
 
