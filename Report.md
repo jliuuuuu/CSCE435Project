@@ -15,7 +15,7 @@ For this project, our group will be implementing sorting algorithms.
 
 ## 2. _due 10/25_ Brief project description (what algorithms will you be comparing and on what architectures)
 
-For example:
+Algorithms:
 - Lucas Ma:
   - Merge Sort - MPI
   - Merge Sort - CUDA 
@@ -28,9 +28,6 @@ For example:
 - Tanya Trujillo:
   - Sample Sort - MPI
   - Sample Sort - CUDA
-
-
-
 
 ### 2b. Pseudocode for each parallel algorithm
 - For MPI programs, include MPI calls you will use to coordinate between processes
