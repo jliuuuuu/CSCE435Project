@@ -33,8 +33,10 @@ Algorithms:
 - For MPI programs, include MPI calls you will use to coordinate between processes
 - For CUDA programs, indicate which computation will be performed in a CUDA kernel,
   and where you will transfer data to/from GPU
+
 Merge Sort
 Pseudocode:
+```
 procedureparallelmergesort(id, n, data, newdata)
 Begin
 data = sequentialmergesort(data)
@@ -43,10 +45,13 @@ data = parallelmerge(id, dim, data)
 endfor
 newdata = data
 end
+```
 Citation: https://rachitvasudeva.medium.com/parallel-merge-sort-algorithm-e8175ab60e7 
+
 
 Bubble Sort
 Pseudocode:
+```
 bubbleSort(array)
 Begin
 	Sorted = false
@@ -58,10 +63,11 @@ Begin
 			Sorted = false
 	End while
 End
-
+```
 Citation: https://medium.com/@keshav519sharma/parallel-bubble-sort-7ec75891afff
 
 Odd-Even Transposition Sort
+```
 procedure ODD-EVEN PAR(n)
 begin
 	id := process’s label
@@ -80,6 +86,7 @@ begin
 				compare-exchange max(id - 1);
 	end for
 end ODD-EVEN PAR
+```
 Citation: Design of Parallel Algorithms Slides, Olga Pierce (TAMU)
 
 Sample Sort Pseudocode:
@@ -103,10 +110,7 @@ Sample Sort Pseudocode:
 Citation: https://en.wikipedia.org/wiki/Samplesort
 
 ### 2c. Evaluation plan - what and how will you measure and compare
-- Input sizes, Input types
-- Strong scaling (same problem size, increase number of processors/nodes)
-- Weak scaling (increase problem size, increase number of processors)
-- Number of threads in a block on the GPU 
+
 At the moment, for each of the algorithms, we plan on testing input sizes of arrays in a range of 2^2 to 2^24.
 The input types that we will be using to test are floats and ints. 
 We plan on testing weak scaling for now.
@@ -116,6 +120,11 @@ Implement your proposed algorithms, and test them starting on a small scale.
 Instrument your code, and turn in at least one Caliper file per algorithm;
 if you have implemented an MPI and a CUDA version of your algorithm,
 turn in a Caliper file for each.
+
+## 11/08/2023 Update
+- We have not finished our project implementation quite yet
+- Some of the problems we encountered were time constraints on testing the algorithms
+- For this reason, we also do not have any caliper files at this time in our project
 
 ### 3a. Caliper instrumentation
 Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
