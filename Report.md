@@ -19,10 +19,9 @@ Algorithms:
 - Lucas Ma:
   - Merge Sort - MPI
   - Merge Sort - CUDA 
-- Sam Yang:
+- Sam Yang and Justin Liu:
   - Bubble Sort - MPI
   - Bubble Sort - CUDA
-- Justin Liu:
   - Odd-Even Transposition Sort - MPI
   - Odd-Even Transposition Sort - CUDA
 - Tanya Trujillo:
