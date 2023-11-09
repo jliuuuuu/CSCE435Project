@@ -3,10 +3,10 @@
 ## 0. Group number: 21
 
 ## 1. Group members:
-1. First
-2. Second
-3. Third
-4. Fourth
+1. Justin Liu
+2. Sam Yang
+3. Lucas Ma
+4. Tanya Trujillo
 
 ---
 
@@ -15,28 +15,101 @@ For this project, our group will be implementing sorting algorithms.
 
 ## 2. _due 10/25_ Brief project description (what algorithms will you be comparing and on what architectures)
 
-For example:
-- Merge Sort - MPI on each core
-- Merge Sort - MPI + CUDA 
-- Bubble Sort - Master/Worker
-- Bubble Sort - Single Program Multiple Data
-- Odd-Even Transposition Sort - MPI on each core
-- Odd-Even Transposition Sort - MPI + CUDA
-
-
-
+Algorithms:
+- Lucas Ma:
+  - Merge Sort - MPI
+  - Merge Sort - CUDA 
+- Sam Yang:
+  - Bubble Sort - MPI
+  - Bubble Sort - CUDA
+- Justin Liu:
+  - Odd-Even Transposition Sort - MPI
+  - Odd-Even Transposition Sort - CUDA
+- Tanya Trujillo:
+  - Sample Sort - MPI
+  - Sample Sort - CUDA
 
 ### 2b. Pseudocode for each parallel algorithm
 - For MPI programs, include MPI calls you will use to coordinate between processes
 - For CUDA programs, indicate which computation will be performed in a CUDA kernel,
   and where you will transfer data to/from GPU
+Merge Sort
+Pseudocode:
+procedureparallelmergesort(id, n, data, newdata)
+Begin
+data = sequentialmergesort(data)
+for dim = 1 to n
+data = parallelmerge(id, dim, data)
+endfor
+newdata = data
+end
+Citation: https://rachitvasudeva.medium.com/parallel-merge-sort-algorithm-e8175ab60e7 
+
+Bubble Sort
+Pseudocode:
+bubbleSort(array)
+Begin
+	Sorted = false
+	N = len(array)
+	While not sorted
+		Sorted = true
+		For i = 0 to N-1
+			Swap array[i] and array[i+1]
+			Sorted = false
+	End while
+End
+
+Citation: https://medium.com/@keshav519sharma/parallel-bubble-sort-7ec75891afff
+
+Odd-Even Transposition Sort
+procedure ODD-EVEN PAR(n)
+begin
+	id := process’s label
+	for i:= 1 to n do
+	begin 
+		if i is odd then
+			if id is odd
+				compare-exchange min(id+1);
+			else 
+				compare-exchange max(id - 1);
+
+		if i is even then
+			if id is even then
+				compare-exchange min(id + 1);
+			else 
+				compare-exchange max(id - 1);
+	end for
+end ODD-EVEN PAR
+Citation: Design of Parallel Algorithms Slides, Olga Pierce (TAMU)
+
+Sample Sort Pseudocode:
+1. Data Initialization
+    - For MPI: Have each process create its own local data
+    - For CUDA: Create data array at the beginning
+2. Create splitters: 
+    - MPI: Select splitters from local data and send those splitters to other processes
+        - MPI_Allgather() -> to send local splitters to global splitters
+    - CUDA: User kernel calls to split up the data
+3. Sort Splitters
+4. Partition the data:
+    - MPI: set up buffers to do MPI_Send and MPI_Receive to deliver the data for each splitter to the other processes
+    - CUDA: send data using cudaMemcpy
+5. Sort the data:
+    - MPI and CUDA: use quicksort to sort the local data on each process
+    - CUDA calls quicksort in each kernel
+6. Merge the data from each process
+  - MPI: MPI_Allgather
+  - CUDA: cudaMemcpy
+Citation: https://en.wikipedia.org/wiki/Samplesort
 
 ### 2c. Evaluation plan - what and how will you measure and compare
 - Input sizes, Input types
 - Strong scaling (same problem size, increase number of processors/nodes)
 - Weak scaling (increase problem size, increase number of processors)
 - Number of threads in a block on the GPU 
-
+At the moment, for each of the algorithms, we plan on testing input sizes of arrays in a range of 2^2 to 2^24.
+The input types that we will be using to test are floats and ints. 
+We plan on testing weak scaling for now.
 
 ## 3. Project implementation
 Implement your proposed algorithms, and test them starting on a small scale.
