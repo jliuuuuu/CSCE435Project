@@ -125,6 +125,26 @@ turn in a Caliper file for each.
 - Some of the problems we encountered were time constraints on testing the algorithms
 - For this reason, we also do not have any caliper files at this time in our project
 
+## Merge Sort Performance Evaluation
+# Algorithm Description
+Merge sort is a popular dive-and-conquer algorithm that is often performed with recursion. The steps to the algorithm are:
+- Divide: Divide unsorted list into two equal halves. This step is repeated recursively and multiple processors are assigned to divide the list concurrently.
+- Conquer: Multiple processors independtly sort their own sublists. This involves furthing dividing and sorting unti lthe base case is reached
+- Merge: Merging involves coordinating the merging of sorted sublists into a larger sorted sublist
+
+# What are you comparing?
+This algorithm will compare different array sizes with different numbers of processors to indicate what the most optimal conditions are for parallelism to have the greatest impact on speedup and performance.
+
+# Problem sizes
+- array sizes: 2^16, 2^20, 2^24, 2^28
+- number of processors: 2, 4, 8, 16, 32, 64
+
+# Amount of resources
+- Grace HPC Cluster (grace.hprc.tamu.edu)
+
+# Figures
+We currently do not have any figures for merge sort at the moment
+
 ### 3a. Caliper instrumentation
 Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
 (same as lab1 build.sh) to collect caliper files for each experiment you run.
