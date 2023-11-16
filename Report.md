@@ -16,16 +16,10 @@ For this project, our group will be implementing sorting algorithms.
 ## 2. _due 10/25_ Brief project description (what algorithms will you be comparing and on what architectures)
 
 Algorithms:
-- Lucas Ma:
   - Merge Sort - MPI
   - Merge Sort - CUDA 
-- Sam Yang:
   - Bubble Sort - MPI
   - Bubble Sort - CUDA
-- Justin Liu:
-  - Odd-Even Transposition Sort - MPI
-  - Odd-Even Transposition Sort - CUDA
-- Tanya Trujillo:
   - Sample Sort - MPI
   - Sample Sort - CUDA
 
@@ -125,6 +119,66 @@ turn in a Caliper file for each.
 - We have not finished our project implementation quite yet
 - Some of the problems we encountered were time constraints on testing the algorithms
 - For this reason, we also do not have any caliper files at this time in our project
+
+## Merge Sort Performance Evaluation
+### Algorithm Description
+Merge sort is a popular dive-and-conquer algorithm that is often performed with recursion. The steps to the algorithm are:
+- Divide: Divide unsorted list into two equal halves. This step is repeated recursively and multiple processors are assigned to divide the list concurrently.
+- Conquer: Multiple processors independtly sort their own sublists. This involves furthing dividing and sorting unti lthe base case is reached
+- Merge: Merging involves coordinating the merging of sorted sublists into a larger sorted sublist
+
+### What are you comparing?
+This algorithm will compare different array sizes with different numbers of processors to indicate what the most optimal conditions are for parallelism to have the greatest impact on speedup and performance.
+
+### Problem sizes
+- array sizes: 2^16, 2^20, 2^24, 2^28
+- number of processors: 2, 4, 8, 16, 32, 64
+
+### Amount of resources
+- Grace HPC Cluster (grace.hprc.tamu.edu)
+
+### Figures
+We currently do not have any figures for merge sort at the moment
+
+## Bubble Sort Performance Evaluation
+### Algorithm Description
+Bubble Sort is a sorting algorithm that works by repeatedly swapping adjacent elements if they are in the wrong order.
+- Distribute Data: divide list into parts and distribute among processes. Each process will work on its on portion of the list.
+- Local Bubble Sort: each process performs a bubble sort on its part
+- Exchange & Merge: after bubble sort, exchange elements with neighboring processes and perform comparisons and swaps to ensure that it is sorted. Uses MPI_Barrier
+
+### What are you comparing?
+This algorithm will compare different array sizes with different numbers of processors to indicate what the most optimal conditions are for parallelism to have the greatest impact on speedup and performance.
+
+### Problem sizes
+- array sizes: 2^16, 2^20, 2^24, 2^28
+- number of processors: 2, 4, 8, 16, 32, 64
+
+### Amount of resources
+- Grace HPC Cluster (grace.hprc.tamu.edu)
+
+### Figures
+We currently do not have any figures for bubble sort at the moment
+
+## Quick Sort Performance Evaluation
+### Algorithm Description
+Quick Sort is a divide-and-conquer sorting algorithm that recursively divides an array into smaller subarrays, separates them depending on a specified pivot element, and then sorts each subarray to achieve the sorted order.
+- Distribute Data: divide list into parts and distribute among processes. Each process will work on its on portion of the list.
+- Local Quick Sort: each process performs a quick sort on its part. Involves selecting a pivot, partitioning the data, and recursively sorting the sublists.
+- Exchange & Merge: after quick sort, exchange elements with neighboring processes and perform comparisons and swaps to ensure that it is sorted.
+- Repeat until entire list is sorted.
+
+### What are you comparing?
+This algorithm will compare different array sizes with different numbers of processors to indicate what the most optimal conditions are for parallelism to have the greatest impact on speedup and performance.
+
+### Problem sizes
+- array sizes: 2^16, 2^20, 2^24, 2^28
+- number of processors: 2, 4, 8, 16, 32, 64
+
+### Amount of resources
+- Grace HPC Cluster (grace.hprc.tamu.edu)
+
+### Figures
 
 ### 3a. Caliper instrumentation
 Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
