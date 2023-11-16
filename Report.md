@@ -178,7 +178,28 @@ This algorithm will compare different array sizes with different numbers of proc
 ### Amount of resources
 - Grace HPC Cluster (grace.hprc.tamu.edu)
 
+## Sample Sort Performance Evaluation
+### Algorithm Description
+Sample Sort is a sorting algorithm similar to the Quick Sort algorithm in which it divides and conquers but uses several pivot elements to sort the array in several segments.
+- Select Pivots: Each process selects pivots (splitters) to send to the other processes
+- Sort Pivots: The global pivots collected from each process will be sorted
+- Distribute Data: Processes send each element to the required segments of other processes
+- Local Sorting: Each process sorts its own elements
+
+### What are you comparing?
+This algorithm will be comparing weak and strong scaling for different sized problems and different number of threads/processes as well as the speedup 
+for different implementations in MPI and CUDA. 
+
+### Problem sizes
+- array sizes: 2^16, 2^20, 2^24, 2^28
+- number of processors: 2, 4, 8, 16, 32, 64, 128
+
+### Amount of resources
+- Grace HPC Cluster (grace.hprc.tamu.edu)
+    - 1 CPU
+    - 1 GPU
 ### Figures
+There are currently no figures for the sample sort algorithm
 
 ### 3a. Caliper instrumentation
 Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
