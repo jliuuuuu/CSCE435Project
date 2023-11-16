@@ -16,15 +16,10 @@ For this project, our group will be implementing sorting algorithms.
 ## 2. _due 10/25_ Brief project description (what algorithms will you be comparing and on what architectures)
 
 Algorithms:
-- Lucas Ma:
   - Merge Sort - MPI
   - Merge Sort - CUDA 
-- Sam Yang and Justin Liu:
   - Bubble Sort - MPI
   - Bubble Sort - CUDA
-  - Odd-Even Transposition Sort - MPI
-  - Odd-Even Transposition Sort - CUDA
-- Tanya Trujillo:
   - Sample Sort - MPI
   - Sample Sort - CUDA
 
@@ -145,7 +140,7 @@ This algorithm will compare different array sizes with different numbers of proc
 ### Figures
 We currently do not have any figures for merge sort at the moment
 
-### Bubble Sort Performance Evaluation
+## Bubble Sort Performance Evaluation
 ### Algorithm Description
 Bubble Sort is a sorting algorithm that works by repeatedly swapping adjacent elements if they are in the wrong order.
 - Distribute Data: divide list into parts and distribute among processes. Each process will work on its on portion of the list.
