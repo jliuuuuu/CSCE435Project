@@ -142,7 +142,7 @@ This algorithm will compare different array sizes with different numbers of proc
 ### Amount of resources
 - Grace HPC Cluster (grace.hprc.tamu.edu)
 
-# Figures
+### Figures
 We currently do not have any figures for merge sort at the moment
 
 ### 3a. Caliper instrumentation
