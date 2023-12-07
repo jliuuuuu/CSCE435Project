@@ -8,17 +8,17 @@
 
 void data_init(size_t arrSize, int *data, int inputType) {
     if (inputType == 0) {
-        //random implementation
+        // random implementation
         for (size_t i = 0; i < arrSize; i++) {
             data[i] = rand() % (arrSize * 10);
         }
     } else if (inputType == 1) {
-        //sorted implementation
+        // sorted implementation
         for (size_t i = 0; i < arrSize; i++) {
             data[i] = i;
         }
     } else if (inputType == 2) {
-        //reverse sorted implementation
+        // reverse sorted implementation
         for (size_t i = 0; i < arrSize; i++) {
             data[i] = arrSize - i;
         }
@@ -49,7 +49,6 @@ void merge(int arr[], int temp[], int left, int mid, int right) {
 
     CALI_MARK_BEGIN("comp");
     CALI_MARK_BEGIN("comp_large");
-
     while (i <= mid && j <= right) {
         if (arr[i] <= arr[j]) {
             temp[k++] = arr[i++];
@@ -57,13 +56,11 @@ void merge(int arr[], int temp[], int left, int mid, int right) {
             temp[k++] = arr[j++];
         }
     }
-
     CALI_MARK_END("comp_large");
     CALI_MARK_END("comp");
 
     CALI_MARK_BEGIN("comp");
     CALI_MARK_BEGIN("comp_small");
-    
     while (i <= mid) {
         temp[k++] = arr[i++];
     }
@@ -71,7 +68,6 @@ void merge(int arr[], int temp[], int left, int mid, int right) {
     while (j <= right) {
         temp[k++] = arr[j++];
     }
-
     CALI_MARK_END("comp_small");
     CALI_MARK_END("comp");
 
@@ -94,6 +90,7 @@ void mergeSort(int arr[], int temp[], int left, int right) {
 
 int main(int argc, char *argv[]) {
 
+    // input processing
     size_t arrSize;
     int inputType;
     if (argc > 2) {
@@ -118,57 +115,62 @@ int main(int argc, char *argv[]) {
     }
     
     
-    // Initialize MPI
+    // init MPI
     MPI_Init(&argc, &argv);
     double start_time, end_time;
-
-    // Get the total number of processes and the rank of the current process
     int world_size, world_rank;
+
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     MPI_Comm new_comm;
     MPI_Comm_split(MPI_COMM_WORLD, 0, world_rank, &new_comm);
 
+
     CALI_MARK_BEGIN("main");
 
+
     CALI_MARK_BEGIN("data_init");
-    // Define the array to be sorted
     int *data = new int[arrSize];
     data_init(arrSize, data, inputType);
     int arr_size = arrSize;
     CALI_MARK_END("data_init");
 
-    if (world_rank == 0) {
-        printf("Unsorted Array: ");
-        for (int i = 0; i < arr_size; i++) {
-            printf("%d ", data[i]);
-        }
-        printf("\n");
-    }
+    // Checking if data init works
+    // if (world_rank == 0) {
+    //     printf("Unsorted Array: ");
+    //     for (int i = 0; i < arr_size; i++) {
+    //         printf("%d ", data[i]);
+    //     }
+    //     printf("\n");
+    // }
+
     CALI_MARK_BEGIN("comm");
     CALI_MARK_BEGIN("comm_large");
-    // Calculate the size of each chunk for each process
     int chunk_size = arr_size / world_size;
 
-    // Scatter the chunks of the array to each process
+    // scatter chunks of the array to each process
     int local_chunk[chunk_size];
+
+    CALI_MARK_BEGIN("MPI_Scatter");
     MPI_Scatter(data, chunk_size, MPI_INT, local_chunk, chunk_size, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END("MPI_Scatter");
 
     MPI_Barrier(MPI_COMM_WORLD);
     start_time = MPI_Wtime();
     CALI_MARK_END("comm_large");
     CALI_MARK_END("comm");
 
-    // Perform local sort on each process
+    // local sort on each process
     int* temp = (int*)malloc(chunk_size * sizeof(int));
     mergeSort(local_chunk, temp, 0, chunk_size - 1);
 
 
     CALI_MARK_BEGIN("comm");
     CALI_MARK_BEGIN("comm_large");
-    // Gather the sorted chunks back to the root process
+    CALI_MARK_BEGIN("MPI_Gather");
     MPI_Gather(local_chunk, chunk_size, MPI_INT, data, chunk_size, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END("MPI_Gather");
     CALI_MARK_END("comm_large");
     CALI_MARK_END("comm");
 
@@ -179,13 +181,13 @@ int main(int argc, char *argv[]) {
         int* temp = (int*)malloc(arr_size * sizeof(int));
         mergeSort(data, temp, 0, arr_size - 1);
 
-        // Print the sorted array
         end_time = MPI_Wtime();
-        printf("Sorted Array: ");
-        for (int i = 0; i < arr_size; i++) {
-            printf("%d ", data[i]);
-        }
-        printf("\n");
+
+        // printf("Sorted Array: ");
+        // for (int i = 0; i < arr_size; i++) {
+        //     printf("%d ", data[i]);
+        // }
+        // printf("\n");
 
         printf("Total time taken: %f seconds\n", end_time - start_time);
 
@@ -198,7 +200,6 @@ int main(int argc, char *argv[]) {
     }
 
     free(temp);
-
     CALI_MARK_END("main");
 
     adiak::init(NULL);
