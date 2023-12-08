@@ -160,24 +160,6 @@ This algorithm will compare different array sizes with different numbers of proc
 ### Figures
 We currently do not have any figures for bubble sort at the moment
 
-## Quick Sort Performance Evaluation
-### Algorithm Description
-Quick Sort is a divide-and-conquer sorting algorithm that recursively divides an array into smaller subarrays, separates them depending on a specified pivot element, and then sorts each subarray to achieve the sorted order.
-- Distribute Data: divide list into parts and distribute among processes. Each process will work on its on portion of the list.
-- Local Quick Sort: each process performs a quick sort on its part. Involves selecting a pivot, partitioning the data, and recursively sorting the sublists.
-- Exchange & Merge: after quick sort, exchange elements with neighboring processes and perform comparisons and swaps to ensure that it is sorted.
-- Repeat until entire list is sorted.
-
-### What are you comparing?
-This algorithm will compare different array sizes with different numbers of processors to indicate what the most optimal conditions are for parallelism to have the greatest impact on speedup and performance.
-
-### Problem sizes
-- array sizes: 2^16, 2^20, 2^24, 2^28
-- number of processors: 2, 4, 8, 16, 32, 64
-
-### Amount of resources
-- Grace HPC Cluster (grace.hprc.tamu.edu)
-
 ## Sample Sort Performance Evaluation
 ### Algorithm Description
 Sample Sort is a sorting algorithm similar to the Quick Sort algorithm in which it divides and conquers but uses several pivot elements to sort the array in several segments.
