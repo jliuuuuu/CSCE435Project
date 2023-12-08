@@ -78,8 +78,8 @@ __global__ void mergeSort(int* array, int* temp, int size) {
     for (int i = 1; i <= size - 1; i = 2 * i) {
         for (int j = 0; j < size - 1; j += 2 * i) {
             int mid = min(j + i - 1, size - 1);
-            int rightEnd = min(j + 2 * i - 1, size - 1);
-            merge(array, temp, j, mid, rightEnd);
+            int right = min(j + 2 * i - 1, size - 1);
+            merge(array, temp, j, mid, right);
         }
     }
 }
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
         arrSize = std::stoi(argv[2]);
         inputType = std::stoi(argv[3]);
     } else {
-        printf("2 inputs needed: <num processors> <array size> <input type> \n");
+        printf("3 inputs needed: <num processors> <array size> <input type> \n");
         printf("input types: 0= random, 1= sorted, 2= reverse sorted, 3= 1%% perturbed");
 
         return 0;
@@ -111,36 +111,69 @@ int main(int argc, char **argv) {
         inputTypeStr = "1% Perturbed";
     }
 
+    printf("num processors: %d \n", numProcessors);
+    printf("array size: %d \n", arrSize);
+    printf("input type: %s \n", inputTypeStr);
+
+    int num_blocks = arrSize / numProcessors;
+
+    CALI_MARK_BEGIN("main");
+
 
     int array[arrSize];
     int* d_array, *d_temp;
 
+    CALI_MARK_BEGIN("data_init");
     data_init(arrSize, array, inputType);
+    CALI_MARK_END("data_init");
+
+    // Output the unsorted array
+    // printf("Sorted array:\n");
+    // for (int i = 0; i < arrSize; ++i) {
+    //     printf("%d ", array[i]);
+    // }
+    // printf("\n");
 
     // Allocate memory on the device
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_large");
     cudaMalloc((void **)&d_array, sizeof(int) * arrSize);
     cudaMemcpy(d_array, array, sizeof(int) * arrSize, cudaMemcpyHostToDevice);
     cudaMalloc((void **)&d_temp, sizeof(int) * arrSize);
+    CALI_MARK_END("comm_large");
+    CALI_MARK_END("comm");
 
-    // Launch the parallel merge sort
+    CALI_MARK_BEGIN("comp");
+    CALI_MARK_BEGIN("comp_large");
     mergeSort<<<1, 1>>>(d_array, d_temp, arrSize);
+    CALI_MARK_END("comp_large");
+    CALI_MARK_END("comp");
 
     // Copy the sorted array back to the host
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_large");
     cudaMemcpy(array, d_array, arrSize * sizeof(int), cudaMemcpyDeviceToHost);
+    CALI_MARK_END("comm_large");
+    CALI_MARK_END("comm");
 
     // Output the sorted array
-    printf("Sorted array:\n");
-    for (int i = 0; i < arrSize; ++i) {
-        printf("%d ", array[i]);
-    }
-    printf("\n");
+    // printf("Sorted array:\n");
+    // for (int i = 0; i < arrSize; ++i) {
+    //     printf("%d ", array[i]);
+    // }
+    // printf("\n");
 
+    CALI_MARK_BEGIN("correctness_check");
     bool isSorted = validate_sorted_arr(arrSize, array);
+    CALI_MARK_END("correctness_check");
+
     printf("is array sorted: %s", isSorted ? "true" : "false");
 
     // Free allocated memory
     cudaFree(d_array);
     cudaFree(d_temp);
+
+    CALI_MARK_END("main");
 
     adiak::init(NULL);
     adiak::launchdate();
@@ -153,7 +186,8 @@ int main(int argc, char **argv) {
     adiak::value("SizeOfDatatype", sizeof(int));
     adiak::value("InputSize", arrSize);
     adiak::value("InputType", inputTypeStr);
-    adiak::value("num_procs", numProcessors);
+    adiak::value("num_threads", numProcessors);
+    adiak::value("num_blocks", num_blocks);
     adiak::value("group_num", 21);
     adiak::value("implementation_source", "Online, AI");
 
