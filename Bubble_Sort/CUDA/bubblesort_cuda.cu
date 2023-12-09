@@ -62,13 +62,6 @@ void print_elapsed(clock_t start, clock_t stop) {
     std::cout << "Elapsed time: " << elapsed_time << "s\n";
 } 
 
-void array_print(int *data, int arr_size) {
-    for(int i = 0; i < arr_size; i++) {
-        std::cout << data[i] << " ";
-    }
-    std::cout << "\n";
-}
-
 bool verify_sort(int *data, int arr_size) {
     for(int i = 1; i < arr_size; i++) {
         if(data[i-1] > data[i]) {
