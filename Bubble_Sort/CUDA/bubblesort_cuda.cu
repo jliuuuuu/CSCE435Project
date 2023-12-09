@@ -25,12 +25,13 @@ int NUM_VALS;
 int SORT_TYPE;
 std::string SORT_TYPE_STRING;
 
+
+
 int random_int() {
     return static_cast<int>(rand());
 }
 
 void generate_data(int *data, size_t arr_size, int sort_type) {
-    // fill array with random values
     if (sort_type == 1) {
         srand(time(NULL));
         for (int i = 0; i < arr_size; ++i) {
