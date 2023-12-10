@@ -4,7 +4,7 @@ find_package(MPI REQUIRED)
 find_package(caliper REQUIRED)
 find_package(adiak REQUIRED)
 
-add_executable(bubblesort bubblesort.cpp)
+add_executable(bubblesort bubblesort_mpi.cpp)
 
 message(STATUS "MPI includes : ${MPI_INCLUDE_PATH}")
 message(STATUS "Caliper includes : ${caliper_INCLUDE_DIR}")
