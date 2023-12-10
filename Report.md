@@ -393,6 +393,182 @@ For the main component, we can see that the data stayed mostly consistent across
 ### CUDA
 I was not able to get my CUDA implementation of Sample Sort to work in time. I believe this was due to not being able to properly get the buckets to send and receive data across each of the BLOCKS in the kernel calls in order to properly parallelize the algorithm.
 
+## Bubble Sort Performance Analysis
+  ### MPI
+  For Bubble Sort MPI, our group decided to run commands with 2-32 processes w/ varying input sizes that ranged from 2^16 to 2^20. As we increased varying input sizes, our implementation did not perform as well, which is expected since the bubble sorting algorithm  we implemented ran in O(n^2) time. The input sizes from from 2^22 and onward were too much for our implementation as it would take multiple hours for our program to run and finish jobs. However, our code implementation did a wonderful job handling different numbers of processes with lower input sizes as jobs were finishing in minutes. For future reference, we would opt to use a more efficient algorithm for future performances.
+
+![](plots/bubble_sort/Picture1.png)
+![](plots/bubble_sort/Picture2.png)
+
+##### Strong Scaling - comp_large
+  For the comp_large component, the graphs for 2^16 input size show that as the number or processes increase, the average time per rank increased, which is odd considering that for input sizes 2^18 and 2^20 and all input sizes, the average time per rank would decrease after 4 processes were ran. For all input types, the lines were relatively the same.
+
+![](plots/bubble_sort/Picture3.png)
+![](plots/bubble_sort/Picture4.png)
+
+#### Strong Scaling - main 
+
+#### Graph Overview
+These graphs represent the main region's average over different input sizes.
+
+#### Trends
+As the number of processes increase to 4, the average time per rank decreases and then on, the average time per rank either minimally or constantly increases.
+
+#### Interpretation
+This graph shows that the implementation of parallelism is great when processes go up to 4 but not so much afterwards.
+
+![](plots/bubble_sort/Picture5.png)
+![](plots/bubble_sort/Picture6.png)
+
+#### Strong Scaling - comm_large 
+
+#### Graph Overview
+These graphs represent the comm_large region's average over different input types.
+
+#### Trends
+As the number of processes increase we see steady decreases in the average time per rank until they plateau off after around 16 processes.
+
+#### Interpretation
+This graph shows that the implementation of parallelism is great when processes go up to 16.
+
+![](plots/bubble_sort/Picture7.png)
+![](plots/bubble_sort/Picture8.png)
+![](plots/bubble_sort/Picture9.png)
+![](plots/bubble_sort/Picture10.png)
+
+### Weak Scaling - comp_large
+
+#### Graph Overview
+These graphs represent the comp_large region's average over different input types.
+
+#### Trends
+As the number of processes increase, the average time per rank increased for larger input sizes for input types Sorted and 1% but the opposite for Random and Reverse.
+
+#### Interpretation
+This graph shows that the implementation of parallelism is great for larger input sizes for Random and Reverse.
+
+![](plots/bubble_sort/Picture11.png)
+![](plots/bubble_sort/Picture12.png)
+![](plots/bubble_sort/Picture13.png)
+![](plots/bubble_sort/Picture14.png)
+
+### Weak Scaling - main
+
+#### Graph Overview
+These graphs represent the main region's average over different input sizes.
+
+#### Trends
+The same trend from comp_large applies for main.
+
+#### Interpretation
+The same interpretation from comp_large can be made with main.
+
+![](plots/bubble_sort/Picture15.png)
+![](plots/bubble_sort/Picture16.png)
+
+
+### Weak Scaling - comm_large
+
+#### Graph Overview
+These graphs represent the comm_large region's average over different input sizes.
+
+#### Trends
+The same trend from comp_large and main applies to comm_large for all input types
+
+#### Interpretation
+The same interpretation from comp_large and main can be made with comm_large.
+
+
+![](plots/bubble_sort/Picture17.png)
+![](plots/bubble_sort/Picture18.png)
+
+### CUDA Strong Scaling - comp_large
+
+#### Graph Overview
+These graphs represent the comp_large region's average over different input types.
+
+#### Trends
+Sorted and Random input types do the best in regards to decreased time while 1% and reverse do not. This applies even with increasing input sizes. 
+
+#### Interpretation
+The graphs show that parallelism works wonderfully for sorted and random input types.
+
+![](plots/bubble_sort/Picture19.png)
+![](plots/bubble_sort/Picture20.png)
+
+### CUDA Strong Scaling - main
+
+#### Graph Overview
+These graphs represent the main region's average over different input types.
+
+#### Trends
+For smaller input sizes, increasing number of threads to 256, we see that the reverse input type spikes and then drops afterwards. The other input types simply decrease time as you add more threads. For larger input sizes, the times vary for all input types
+
+#### Interpretation
+The graphs show that parallelism works wonderfully for smaller input sizes compared to larger ones.
+
+![](plots/bubble_sort/Picture21.png)
+![](plots/bubble_sort/Picture22.png)
+
+### CUDA Strong Scaling - comm_large
+
+#### Graph Overview
+These graphs represent the comm_large region's average over different input types.
+
+#### Trends
+For smaller input sizes, increasing number of threads for all input types decreases time until 128 threads when the time goes back up. For larger input sizes, we see varying increases for all input types.
+
+#### Interpretation
+The graphs show that parallelism works wonderfully for smaller input sizes for specific threads but it did not work so well for larger input sizes. 
+
+![](plots/bubble_sort/Picture23.png)
+![](plots/bubble_sort/Picture24.png)
+![](plots/bubble_sort/Picture25.png)
+![](plots/bubble_sort/Picture26.png)
+
+### CUDA Weak Scaling - main
+
+#### Graph Overview
+These graphs represent the main region's average over different input sizes.
+
+#### Trends
+Increasing input sizes increases average time per rank. For all input types, the times stay consistent even after increasing threads.
+
+#### Interpretation
+The graphs show that parallelism does not really work for decreasing times. 
+
+![](plots/bubble_sort/Picture27.png)
+![](plots/bubble_sort/Picture28.png)
+![](plots/bubble_sort/Picture29.png)
+![](plots/bubble_sort/Picture30.png)
+
+### CUDA Weak Scaling - comp_large
+
+#### Graph Overview
+These graphs represent the comp_large region's average over different input sizes.
+
+#### Trends
+The same trends apply from the main region.
+
+#### Interpretation
+The graphs show the same interpretations from main trends.
+
+![](plots/bubble_sort/Picture31.png)
+![](plots/bubble_sort/Picture32.png)
+![](plots/bubble_sort/Picture33.png)
+![](plots/bubble_sort/Picture34.png)
+
+### CUDA Weak Scaling - comm_large
+
+#### Graph Overview
+These graphs represent the comm_large region's average over different input sizes.
+
+#### Trends
+The same trends apply from the main and comm_large region.
+
+#### Interpretation
+The graphs show the same interpretations from main and comm_large trends.
+
 ## 5. Presentation
 Plots for the presentation should be as follows:
 - For each implementation:
