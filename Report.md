@@ -11,7 +11,7 @@
 ---
 
 ## 2. _due 10/25_ Project topic
-For this project, our group will be implementing sorting algorithms.
+For this project, our group will be implementing sorting algorithms (bubble sort, sample sort and merge sort) in MPI and CUDA. We will examine and compare different algorithm efficencies and times through a variety of different inputs.
 
 ## 2. _due 10/25_ Brief project description (what algorithms will you be comparing and on what architectures)
 
@@ -28,19 +28,73 @@ Algorithms:
 - For CUDA programs, indicate which computation will be performed in a CUDA kernel,
   and where you will transfer data to/from GPU
 
-Merge Sort
+Merge Sort MPI
 Pseudocode:
 ```
-procedureparallelmergesort(id, n, data, newdata)
-Begin
-data = sequentialmergesort(data)
-for dim = 1 to n
-data = parallelmerge(id, dim, data)
-endfor
-newdata = data
-end
+void merge(array, left, mid, right):
+    i = left, j = mid + 1, k = 0
+    while (i <= mid && j <= right) {
+        if (arr[i] <= arr[j]) {
+            temp[k++] = arr[i++];
+        } else {
+            temp[k++] = arr[j++];
+        }
+    }
+
+
+void mergeSort(array, left, right):
+    if (left < right):
+        mid = left + (right - left) / 2
+
+        mergeSort(array, left, mid)
+        mergeSort(array, mid + 1, right)
+
+        merge(array, left, mid, right)
+
+main:
+    set up MPI: MPI_Init, MPI_Comm_size, MPI_Comm_rank
+    MPI_Comm_split
+    chunk_size = arr_size / world_size;
+    MPI_Scatter(data, chunk_size)
+
+    // local sort on each process
+    temp = malloc(chunk_size * sizeof(int))
+    mergeSort(local_chunk, temp, 0, chunk_size - 1)
+
+    MPI_Gather
+
+    if (world_rank == 0):
+        mergeSort(data, 0, arr_size - 1)
+        validate_sorted_arr(arrSize, data)
+    MPI_Comm_free
+    MPI_Finalize
+    
 ```
-Citation: https://rachitvasudeva.medium.com/parallel-merge-sort-algorithm-e8175ab60e7 
+Citation: https://selkie-macalester.org/csinparallel/modules/MPIProgramming/build/html/mergeSort/mergeSort.html#
+
+Merge Sort CUDA
+
+```
+_device__ void merge(array, temp, left, mid, right):
+    // same as above
+
+__global__ void mergeSort(array, temp, size):
+    // iterative merge sort because cannot perform recursive functions inside CUDA
+
+main:
+    set up and format data
+
+    cudaMalloc((void **)&array, sizeof(int) * arrSize)
+    cudaMemcpy(array, array, sizeof(int) * arrSize, cudaMemcpyHostToDevice)
+    cudaMalloc((void **)&temp, sizeof(int) * arrSize)
+
+    mergeSort<<<1, 1>>>(array, temp, arrSize);
+
+    cudaMemcpy(array, arrSize * sizeof(int), cudaMemcpyDeviceToHost);
+
+    validate_sorted_arr(arrSize, array);
+
+```
 
 
 Bubble Sort
@@ -106,8 +160,10 @@ Citation: https://en.wikipedia.org/wiki/Samplesort
 ### 2c. Evaluation plan - what and how will you measure and compare
 
 At the moment, for each of the algorithms, we plan on testing input sizes of arrays in a range of 2^2 to 2^24.
-The input types that we will be using to test are floats and ints. 
-We plan on testing weak scaling for now.
+The input types that we will be using to test are ints. 
+We test weak scaling and strong scaling for all algorithms.
+We test different input sizes as well as different input types(sorted, random, reverse sorted, 1% perturbed).
+
 
 ## 3. Project implementation
 Implement your proposed algorithms, and test them starting on a small scale.
@@ -121,24 +177,7 @@ turn in a Caliper file for each.
 - For this reason, we also do not have any caliper files at this time in our project
 
 ## Merge Sort Performance Evaluation
-### Algorithm Description
-Merge sort is a popular dive-and-conquer algorithm that is often performed with recursion. The steps to the algorithm are:
-- Divide: Divide unsorted list into two equal halves. This step is repeated recursively and multiple processors are assigned to divide the list concurrently.
-- Conquer: Multiple processors independtly sort their own sublists. This involves furthing dividing and sorting unti lthe base case is reached
-- Merge: Merging involves coordinating the merging of sorted sublists into a larger sorted sublist
 
-### What are you comparing?
-This algorithm will compare different array sizes with different numbers of processors to indicate what the most optimal conditions are for parallelism to have the greatest impact on speedup and performance.
-
-### Problem sizes
-- array sizes: 2^16, 2^20, 2^24, 2^28
-- number of processors: 2, 4, 8, 16, 32, 64
-
-### Amount of resources
-- Grace HPC Cluster (grace.hprc.tamu.edu)
-
-### Figures
-We currently do not have any figures for merge sort at the moment
 
 ## Bubble Sort Performance Evaluation
 ### Algorithm Description
@@ -183,136 +222,3 @@ for different implementations in MPI and CUDA.
 ### Figures
 There are currently no figures for the sample sort algorithm
 
-### 3a. Caliper instrumentation
-Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
-(same as lab1 build.sh) to collect caliper files for each experiment you run.
-
-Your Caliper regions should resemble the following calltree
-(use `Thicket.tree()` to see the calltree collected on your runs):
-```
-main
-|_ data_init
-|_ comm
-|    |_ MPI_Barrier
-|    |_ comm_small  // When you broadcast just a few elements, such as splitters in Sample sort
-|    |   |_ MPI_Bcast
-|    |   |_ MPI_Send
-|    |   |_ cudaMemcpy
-|    |_ comm_large  // When you send all of the data the process has
-|        |_ MPI_Send
-|        |_ MPI_Bcast
-|        |_ cudaMemcpy
-|_ comp
-|    |_ comp_small  // When you perform the computation on a small number of elements, such as sorting the splitters in Sample sort
-|    |_ comp_large  // When you perform the computation on all of the data the process has, such as sorting all local elements
-|_ correctness_check
-```
-
-Required code regions:
-- `main` - top-level main function.
-    - `data_init` - the function where input data is generated or read in from file.
-    - `correctness_check` - function for checking the correctness of the algorithm output (e.g., checking if the resulting data is sorted).
-    - `comm` - All communication-related functions in your algorithm should be nested under the `comm` region.
-      - Inside the `comm` region, you should create regions to indicate how much data you are communicating (i.e., `comm_small` if you are sending or broadcasting a few values, `comm_large` if you are sending all of your local values).
-      - Notice that auxillary functions like MPI_init are not under here.
-    - `comp` - All computation functions within your algorithm should be nested under the `comp` region.
-      - Inside the `comp` region, you should create regions to indicate how much data you are computing on (i.e., `comp_small` if you are sorting a few values like the splitters, `comp_large` if you are sorting values in the array).
-      - Notice that auxillary functions like data_init are not under here.
-
-All functions will be called from `main` and most will be grouped under either `comm` or `comp` regions, representing communication and computation, respectively. You should be timing as many significant functions in your code as possible. **Do not** time print statements or other insignificant operations that may skew the performance measurements.
-
-**Nesting Code Regions** - all computation code regions should be nested in the "comp" parent code region as following:
-```
-CALI_MARK_BEGIN("comp");
-CALI_MARK_BEGIN("comp_large");
-mergesort();
-CALI_MARK_END("comp_large");
-CALI_MARK_END("comp");
-```
-
-**Looped GPU kernels** - to time GPU kernels in a loop:
-```
-### Bitonic sort example.
-int count = 1;
-CALI_MARK_BEGIN("comp");
-CALI_MARK_BEGIN("comp_large");
-int j, k;
-/* Major step */
-for (k = 2; k <= NUM_VALS; k <<= 1) {
-    /* Minor step */
-    for (j=k>>1; j>0; j=j>>1) {
-        bitonic_sort_step<<<blocks, threads>>>(dev_values, j, k);
-        count++;
-    }
-}
-CALI_MARK_END("comp_large");
-CALI_MARK_END("comp");
-```
-
-**Calltree Examples**:
-
-```
-# Bitonic sort tree - CUDA looped kernel
-1.000 main
-├─ 1.000 comm
-│  └─ 1.000 comm_large
-│     └─ 1.000 cudaMemcpy
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
-
-```
-# Matrix multiplication example - MPI
-1.000 main
-├─ 1.000 comm
-│  ├─ 1.000 MPI_Barrier
-│  ├─ 1.000 comm_large
-│  │  ├─ 1.000 MPI_Recv
-│  │  └─ 1.000 MPI_Send
-│  └─ 1.000 comm_small
-│     ├─ 1.000 MPI_Recv
-│     └─ 1.000 MPI_Send
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
-
-```
-# Mergesort - MPI
-1.000 main
-├─ 1.000 comm
-│  ├─ 1.000 MPI_Barrier
-│  └─ 1.000 comm_large
-│     ├─ 1.000 MPI_Gather
-│     └─ 1.000 MPI_Scatter
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
-
-#### 3b. Collect Metadata
-
-Have the following `adiak` code in your programs to collect metadata:
-```
-adiak::init(NULL);
-adiak::launchdate();    // launch date of the job
-adiak::libraries();     // Libraries used
-adiak::cmdline();       // Command line used to launch the job
-adiak::clustername();   // Name of the cluster
-adiak::value("Algorithm", algorithm); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
-adiak::value("ProgrammingModel", programmingModel); // e.g., "MPI", "CUDA", "MPIwithCUDA"
-adiak::value("Datatype", datatype); // The datatype of input elements (e.g., double, int, float)
-adiak::value("SizeOfDatatype", sizeOfDatatype); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
-adiak::value("InputSize", inputSize); // The number of elements in input dataset (1000)
-adiak::value("InputType", inputType); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
-adiak::value("num_procs", num_procs); // The number of processors (MPI ranks)
-adiak::value("num_threads", num_threads); // The number of CUDA or OpenMP threads
-adiak::value("num_blocks", num_blocks); // The number of CUDA blocks 
-adiak::value("group_num", group_number); // The number of your group (integer, e.g., 1, 10)
-adiak::value("implementation_source", implementation_source) // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
-```
-
-They will show up in the `Thicket.metadata` if the caliper file is read into Thicket.
-
-**See the `Builds/` directory to find the correct Caliper configurations to get the above metrics for CUDA, MPI, or OpenMP programs.** They will show up in the `Thicket.dataframe` when the Caliper file is read into Thicket.
