@@ -1,93 +1,83 @@
-#include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
+#include <vector>
+#include <mpi.h>
+#include <string.h>
+#include <time.h>
 
 #include <caliper/cali.h>
 #include <caliper/cali-manager.h>
 #include <adiak.hpp>
 
-/* Quick Sort Algorithm obtained from ChatGPT*/
-// Function to partition the array and return the pivot index
-void swapElements(float* arr, int index1, int index2) {
-    float temp = arr[index1];
-    arr[index1] = arr[index2];
-    arr[index2] = temp;
+static int intcompare(const void *i, const void *j)
+{
+    if ((*(int *)i) > (*(int *)j))
+        return (1);
+    if ((*(int *)i) < (*(int *)j))
+        return (-1);
+    return (0);
 }
 
-int partition(float* arr, int low, int high) {
-    float pivot = arr[low]; // Choose the first element as the pivot
-    int left = low + 1;
-    int right = high;
+void swap(int *a, int *b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
 
-    while (true) {
-        while (left <= right && arr[left] <= pivot)
-            left++;
-        while (left <= right && arr[right] >= pivot)
-            right--;
+int partition(int *data, int left, int right)
+{
+    int pivot = data[left + (right - left) / 2];
+    int i = left;
+    int j = right;
 
-        if (left <= right) {
-            swapElements(arr, left, right);
-        } else {
-            break;
+    while (i <= j)
+    {
+        while (data[i] < pivot)
+        {
+            i++;
+        }
+        while (data[j] > pivot)
+        {
+            j--;
+        }
+        if (i <= j)
+        {
+            swap(&data[i], &data[j]);
+            i++;
+            j--;
         }
     }
-
-    // Swap the pivot element with the element at the right pointer
-    swap(arr, low, right);
-
-    return right;
+    return i;
 }
 
-// Quicksort function
-void quicksort(float* arr, int low, int high) {
-    if (low < high) {
-        int pivotIndex = partition(arr, low, high);
-        quicksort(arr, low, pivotIndex - 1);
-        quicksort(arr, pivotIndex + 1, high);
-    }
-}
-
-/*********/
-
-float random_float()
+void quickSort(int *data, int left, int right)
 {
-    return (float)rand() / (float)RAND_MAX;
-}
-
-void array_fill(float *arr, int length)
-{
-    srand(time(NULL));
-    int i;
-    for (i = 0; i < length; ++i)
+    if (left < right)
     {
-        arr[i] = random_float();
+        int pivotIndex = partition(data, left, right);
+        quickSort(data, left, pivotIndex - 1);
+        quickSort(data, pivotIndex, right);
     }
 }
 
 int main(int argc, char *argv[])
 {
-    //CALI_CXX_MARK_FUNCTION;
+    CALI_CXX_MARK_FUNCTION;
 
     int num_vals;
-    if (argc == 2)
+
+    if (argc > 2)
     {
-        num_vals = atoi(argv[1]);
+        num_vals = atoi(argv[2]);
     }
-    else
+
+    int generation_type;
+
+    if (argc > 1)
     {
-        printf("\n Please provide the size of the matrix");
-        return 0;
+        generation_type = atoi(argv[1]);
     }
-    int numranks,    /* number of tasks in partition */
-        taskid,      /* a task identifier */
-        numworkers,  /* number of worker tasks */
-        source,      /* task id of message source */
-        dest,        /* task id of message destination */
-        mtype,       /* message type */
-        rows,        /* rows of matrix A sent to each worker */
-        offset,      /* used to determine rows sent to each worker */
-        i, j, k, rc; /* misc */
 
     MPI_Status status;
 
@@ -99,82 +89,289 @@ int main(int argc, char *argv[])
     const char *comp = "comp";
     const char *comp_small = "comp_small";
     const char *comp_large = "comp_large";
+    const char *correctness_check = "correctness_check";
+    int rc;
 
+    // define buffers
+    int *local_data;
+    int *splitters, *global_splitters;
+    int *buckets, *bucketbuffer, *local_bucket;
+    int *outputbuffer, *output;
+
+    // Initialize MPI
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &taskid);
-    MPI_Comm_size(MPI_COMM_WORLD, &numranks);
-    if (numranks < 2)
+
+    int my_rank, num_procs;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);   // my_rank
+    MPI_Comm_size(MPI_COMM_WORLD, &num_procs); // num_procs
+
+    if (num_procs < 2)
     {
         printf("Need at least two MPI tasks. Quitting...\n");
         MPI_Abort(MPI_COMM_WORLD, rc);
         exit(1);
     }
 
-    // set the size of each array in each process
-    int n = num_vals / numranks;
+    int data_size = num_vals / num_procs; // Number of integers each process generates
+
+    local_data = (int *)malloc(data_size * sizeof(int));
+
+    // generate random data each time
+    srand(time(NULL) + my_rank);
 
     // Create caliper ConfigManager object
     cali::ConfigManager mgr;
     mgr.start();
 
-    // each process generates it's own set of data
-    float *values = (float *)malloc(n * sizeof(float));
-    array_fill(values, n);
-
-    // starting and ending indeces for each process
-    int local_start_index = taskid * (num_vals / numranks);
-
-    int local_end_index = (taskid + 1) * (num_vals / numranks);
-
-    // choose splitters for each process
-    int local_splitters_size = numranks - 1;
-
-    float *local_splitters = (float *)malloc(local_splitters_size * sizeof(float));
-
-    /* Written with help from ChatGPT */
-    // choose splitters
-    for (int i = 0; i < local_splitters_size; ++i)
+    char type[20];
+    // every process generates its own data
+    CALI_MARK_BEGIN(data_init);
+    switch (generation_type)
     {
-        int index = (i + 1) * (n / (local_splitters_size + 1));
-        local_splitters[i] = values[index];
+    case 0: // Sorted
+        strcpy(type, "Sorted");
+        for (int i = 0; i < data_size; ++i)
+        {
+            local_data[i] = i + my_rank * data_size; // Each process generates sorted data
+        }
+        break;
+
+    case 1: // Reverse Sorted
+        strcpy(type, "ReverseSorted");
+        for (int i = data_size; i > 0; --i)
+        {
+            local_data[data_size - i] = i + my_rank * data_size; // Each process generates reverse sorted data
+        }
+        break;
+
+    case 2: // Random
+        strcpy(type, "Random");
+        for (int i = 0; i < data_size; ++i)
+        {
+            local_data[i] = rand(); // Each process generates random data
+        }
+        break;
+
+    case 3: // Perturbed
+        strcpy(type, "1%perturbed");
+        for (int i = 0; i < data_size; ++i)
+        {
+            local_data[i] = i + my_rank * data_size; // Generate sorted data initially
+        }
+        // Perturb 1% of the data randomly
+        for (int i = 0; i < data_size / 100; ++i)
+        {
+            int index = rand() % data_size;
+            local_data[index] = rand() % 100; // Perturb with random values
+        }
+        break;
+    }
+    CALI_MARK_END(data_init);
+
+    // sort the local data
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    quickSort(local_data, 0, data_size - 1);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
+
+    // get splitters from each process's local data
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_small);
+    splitters = (int *)malloc(sizeof(int) * (num_procs - 1));
+    for (int i = 0; i < (num_procs - 1); ++i)
+    {
+        splitters[i] = local_data[num_vals / (num_procs * num_procs) * (i + 1)];
+    }
+    CALI_MARK_END(comp_small);
+    CALI_MARK_END(comp);
+
+    // send splitters to process 0
+    global_splitters = (int *)malloc(sizeof(int) * num_procs * (num_procs - 1));
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    MPI_Gather(splitters, num_procs - 1, MPI_INT, global_splitters, num_procs - 1, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
+
+    // choose from the global splitters
+    if (my_rank == 0)
+    {
+        // sort the splitters first
+        CALI_MARK_BEGIN(comp);
+        CALI_MARK_BEGIN(comp_small);
+        quickSort(global_splitters, 0, num_procs * (num_procs - 1));
+        CALI_MARK_END(comp_small);
+        CALI_MARK_END(comp);
+
+        for (int i = 0; i < num_procs - 1; ++i)
+        {
+            splitters[i] = global_splitters[(num_procs - 1) * (i + 1)];
+        }
     }
 
-    /********/
+    // send chosen global_splitters from process 0 to all processes
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_small);
+    MPI_Bcast(splitters, num_procs - 1, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(comm_small);
+    CALI_MARK_END(comm);
 
-    // send the splitters to everyone
-    int global_splitters_size = numranks * local_splitters_size;
+    // create buckets and buffers to send data to other processes
+    buckets = (int *)malloc(sizeof(int) * (num_vals + num_procs));
 
-    float *global_splitters = (float *)malloc(global_splitters_size * sizeof(float));
+    int j = 0;
+    int k = 1;
 
-    MPI_Allgather(local_splitters, local_splitters_size, MPI_FLOAT, global_splitters, local_splitters_size, MPI_COMM_WORLD);
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_small);
+    for (int i = 0; i < data_size; ++i)
+    {
+        if (j < (num_procs - 1))
+        {
+            if (local_data[i] < splitters[j])
+            {
+                buckets[((data_size + 1) * j) + k++] = local_data[i];
+            }
+            else
+            {
+                buckets[(data_size + 1) * j] = k - 1;
+                k = 1;
+                j++;
+                i--;
+            }
+        }
+        else
+        {
+            buckets[((data_size + 1) * j) + k++] = local_data[i];
+        }
+    }
+    buckets[(data_size + 1) * j] = k - 1;
+    CALI_MARK_END(comp_small);
+    CALI_MARK_END(comp);
 
-    // sort splitters
-    quicksort(global_splitters, 0, global_splitters_size - 1);
+    // send buffers
+    bucketbuffer = (int *)malloc(sizeof(int) * (num_vals + num_procs));
 
-    int buffer_sizes[numranks][];
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    MPI_Alltoall(buckets, data_size + 1, MPI_INT, bucketbuffer, data_size + 1, MPI_INT, MPI_COMM_WORLD);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
 
+    // rearrange bucketbuffer
+    local_bucket = (int *)malloc(sizeof(int) * 2 * num_vals / num_procs);
+
+    int count = 1;
+
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_small);
+    for (j = 0; j < num_procs; ++j)
+    {
+        k = 1;
+        for (int i = 0; i < bucketbuffer[(num_vals / num_procs + 1) * j]; i++)
+        {
+            local_bucket[count++] = bucketbuffer[(num_vals / num_procs + 1) * j + k++];
+        }
+    }
+    local_bucket[0] = count - 1;
+    CALI_MARK_END(comp_small);
+    CALI_MARK_END(comp);
+
+    // sort local_bucket
+    int num_elements_to_sort = local_bucket[0];
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    qsort((char *)&local_bucket[1], num_elements_to_sort, sizeof(int), intcompare);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
+
+    // gather the sorted sections at process 0
+    if (my_rank == 0)
+    {
+        outputbuffer = (int *)malloc(sizeof(int) * 2 * num_vals);
+        output = (int *)malloc(sizeof(int) * num_vals);
+    }
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    MPI_Gather(local_bucket, 2 * data_size, MPI_INT, outputbuffer, 2 * data_size, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
+
+    CALI_MARK_BEGIN(correctness_check);
+    // rearrange output buffer for correctnesscheck
+    if (my_rank == 0)
+    {
+        count = 0;
+        for (j = 0; j < num_procs; ++j)
+        {
+            k = 1;
+            for (int i = 0; i < outputbuffer[2 * num_vals / num_procs * j]; ++i)
+            {
+                output[count++] = outputbuffer[(2 * num_vals / num_procs) * j + k++];
+            }
+        }
+
+        // // print output
+        // printf("Output: ");
+        // for (int i = 0; i < num_vals; i++)
+        // {
+        //     printf("%d ", output[i]);
+        // }
+
+        int sorted = 1;
+
+        for(int i = 1; i < num_vals; i++) {
+            if(output[i - 1] > output[i]) {
+                sorted = 0;
+                break;
+            }
+        }
+
+        if(sorted) {
+            printf("sorted");
+        }
+        else {
+            printf("not sorted");
+        }
+
+        free(outputbuffer);
+        free(output);
+    }
+    CALI_MARK_END(correctness_check);
+
+    printf("inputType: %s", type);
 
     adiak::init(NULL);
-    adiak::launchdate();                                             // launch date of the job
-    adiak::libraries();                                              // Libraries used
-    adiak::cmdline();                                                // Command line used to launch the job
-    adiak::clustername();                                            // Name of the cluster
-    adiak::value("Algorithm", "SampleSort");                         // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
-    adiak::value("ProgrammingModel", "MPI");                         // e.g., "MPI", "CUDA", "MPIwithCUDA"
-    adiak::value("Datatype", "float");                               // The datatype of input elements (e.g., double, int, float)
-    adiak::value("SizeOfDatatype", sizeof(float));                   // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
-    adiak::value("InputSize", inputSize);                            // The number of elements in input dataset (1000)
-    adiak::value("InputType", "Random");                             // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
-    adiak::value("num_procs", num_procs);                            // The number of processors (MPI ranks)
-    adiak::value("num_threads", num_threads);                        // The number of CUDA or OpenMP threads
-    adiak::value("num_blocks", num_blocks);                          // The number of CUDA blocks
-    adiak::value("group_num", 21);                                   // The number of your group (integer, e.g., 1, 10)
-    adiak::value("implementation_source", "Online and AI (ChatGPT)") // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
+    adiak::launchdate();                         // launch date of the job
+    adiak::libraries();                          // Libraries used
+    adiak::cmdline();                            // Command line used to launch the job
+    adiak::clustername();                        // Name of the cluster
+    adiak::value("Algorithm", "SampleSort");     // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
+    adiak::value("ProgrammingModel", "MPI");     // e.g., "MPI", "CUDA", "MPIwithCUDA"
+    adiak::value("Datatype", "int");             // The datatype of input elements (e.g., double, int, float)
+    adiak::value("SizeOfDatatype", sizeof(int)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
+    adiak::value("InputSize", num_vals);         // The number of elements in input dataset (1000)
+    adiak::value("InputType", type);             // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
+    adiak::value("num_procs", num_procs);        // The number of processors (MPI my_ranks)
+    // adiak::value("num_threads", num_threads);                        // The number of CUDA or OpenMP threads
+    // adiak::value("num_blocks", num_blocks);                          // The number of CUDA blocks
+    adiak::value("group_num", 21);                                    // The number of your group (integer, e.g., 1, 10)
+    adiak::value("implementation_source", "Online and AI (ChatGPT)"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
 
+    free(local_data);
+    free(splitters);
+    free(global_splitters);
+    free(buckets);
+    free(bucketbuffer);
+    free(local_bucket);
 
     // Flush Caliper output before finalizing MPI
     mgr.stop();
     mgr.flush();
 
     MPI_Finalize();
+    return 0;
 }
