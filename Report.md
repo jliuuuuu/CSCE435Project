@@ -99,8 +99,9 @@ Sample Sort Pseudocode:
     - MPI and CUDA: use quicksort to sort the local data on each process
     - CUDA calls quicksort in each kernel
 6. Merge the data from each process
-  - MPI: MPI_Allgather
-  - CUDA: cudaMemcpy
+     - MPI: MPI_Allgather
+     - CUDA: cudaMemcpy
+  
 Citation: https://en.wikipedia.org/wiki/Samplesort
 
 ### 2c. Evaluation plan - what and how will you measure and compare
@@ -183,136 +184,84 @@ for different implementations in MPI and CUDA.
 ### Figures
 There are currently no figures for the sample sort algorithm
 
-### 3a. Caliper instrumentation
-Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
-(same as lab1 build.sh) to collect caliper files for each experiment you run.
+## 4. Performance evaluation
 
-Your Caliper regions should resemble the following calltree
-(use `Thicket.tree()` to see the calltree collected on your runs):
-```
-main
-|_ data_init
-|_ comm
-|    |_ MPI_Barrier
-|    |_ comm_small  // When you broadcast just a few elements, such as splitters in Sample sort
-|    |   |_ MPI_Bcast
-|    |   |_ MPI_Send
-|    |   |_ cudaMemcpy
-|    |_ comm_large  // When you send all of the data the process has
-|        |_ MPI_Send
-|        |_ MPI_Bcast
-|        |_ cudaMemcpy
-|_ comp
-|    |_ comp_small  // When you perform the computation on a small number of elements, such as sorting the splitters in Sample sort
-|    |_ comp_large  // When you perform the computation on all of the data the process has, such as sorting all local elements
-|_ correctness_check
-```
+Include detailed analysis of computation performance, communication performance. 
+Include figures and explanation of your analysis.
 
-Required code regions:
-- `main` - top-level main function.
-    - `data_init` - the function where input data is generated or read in from file.
-    - `correctness_check` - function for checking the correctness of the algorithm output (e.g., checking if the resulting data is sorted).
-    - `comm` - All communication-related functions in your algorithm should be nested under the `comm` region.
-      - Inside the `comm` region, you should create regions to indicate how much data you are communicating (i.e., `comm_small` if you are sending or broadcasting a few values, `comm_large` if you are sending all of your local values).
-      - Notice that auxillary functions like MPI_init are not under here.
-    - `comp` - All computation functions within your algorithm should be nested under the `comp` region.
-      - Inside the `comp` region, you should create regions to indicate how much data you are computing on (i.e., `comp_small` if you are sorting a few values like the splitters, `comp_large` if you are sorting values in the array).
-      - Notice that auxillary functions like data_init are not under here.
+### Sample Sort Performance Analysis
+  #### MPI
+  For the MPI implementation of Sample Sort I was able to run it with 2 processes up to 1024 processes. I was also able to run it at all of the different input sizes that ranged from 2^16 to 2^28. However, some of the sizes such as 2^16 did not want to work for some reason at a certain number of processes and with different input types. I think this might have been due to my code implementation. Furthermore, the highest size 2^28 did not want to work either at the higher number of processes and I noticed that I would often have to increase the memory size of the nodes in the job files. I believe this was due to how I implemented the Sample Sort logic of creating the buckets which I did for every single process with the same size. Thus, this could explain that sometimes, when a process had more values that fell into its bucket, it might not complete because its bucket needed more memory. 
 
-All functions will be called from `main` and most will be grouped under either `comm` or `comp` regions, representing communication and computation, respectively. You should be timing as many significant functions in your code as possible. **Do not** time print statements or other insignificant operations that may skew the performance measurements.
+  When I went to do the Jupyter plots using the cali files, I had not realized that my inputType variable had not been reading properly into the adiak caliper readings. Therefore, I decided to use Excel to create the graphs. I was only able to do Weak and Strong scaling plots for the comp_large, comm, and main average times. 
 
-**Nesting Code Regions** - all computation code regions should be nested in the "comp" parent code region as following:
-```
-CALI_MARK_BEGIN("comp");
-CALI_MARK_BEGIN("comp_large");
-mergesort();
-CALI_MARK_END("comp_large");
-CALI_MARK_END("comp");
-```
+  ##### Strong Scaling comp_large 
+  For the comp_large component, for most of the input sizes, the graphs show that as the number of processes increased, the computation decreased which is pretty normal. On some of the graphs, they look all over the place because I was not able to get certain runs to work and that is visible in the first plot alone. 
 
-**Looped GPU kernels** - to time GPU kernels in a loop:
-```
-### Bitonic sort example.
-int count = 1;
-CALI_MARK_BEGIN("comp");
-CALI_MARK_BEGIN("comp_large");
-int j, k;
-/* Major step */
-for (k = 2; k <= NUM_VALS; k <<= 1) {
-    /* Minor step */
-    for (j=k>>1; j>0; j=j>>1) {
-        bitonic_sort_step<<<blocks, threads>>>(dev_values, j, k);
-        count++;
-    }
-}
-CALI_MARK_END("comp_large");
-CALI_MARK_END("comp");
-```
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-2.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-3.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-4.png)
+![Strong Scaling](imagesforreport/../../.vscode/imagesforreport/image.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-6.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-7.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-8.png)
+  ##### Strong Scaling comm
+  For the comm component, most of the graphs show that as the number of processes increased, the communication also increased and this is normal because there is more processes to communicate between. The graph for input size 2^28 shows communication increase and then decrease and this is because I was not able to get the runs at the last two processes sizes and again, I think this was due to memory issues in the logic of my code. 
 
-**Calltree Examples**:
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-9.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-11.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-13.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-15.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-17.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-19.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-21.png)
+  ##### Strong Scaling main
+For the main plots, we can see that a lot of the time was taken at the beginning and at the end for various plots and this was due to the data initialization and the correctness check being the key factors in this. We can also see that for the most part, the time each of the input types took up remained constant throughout the runs, with Sorted being the fastest and 1%perturbed being the slowest.
 
-```
-# Bitonic sort tree - CUDA looped kernel
-1.000 main
-├─ 1.000 comm
-│  └─ 1.000 comm_large
-│     └─ 1.000 cudaMemcpy
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-10.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-12.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-14.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-16.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-18.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-20.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-22.png)
+##### Weak Scaling comp_large
+For the weak scaling comp_large components, the graphs show that the computation decreased with each increase in the number of processors and also with the input size.
 
-```
-# Matrix multiplication example - MPI
-1.000 main
-├─ 1.000 comm
-│  ├─ 1.000 MPI_Barrier
-│  ├─ 1.000 comm_large
-│  │  ├─ 1.000 MPI_Recv
-│  │  └─ 1.000 MPI_Send
-│  └─ 1.000 comm_small
-│     ├─ 1.000 MPI_Recv
-│     └─ 1.000 MPI_Send
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-23.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-24.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-25.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-26.png)
+##### Weak Scaling comm
+For the comm component, we can see that the communication increased with both the number of processors and the input size. The highest input size 2^28 gave the most outliers in the data. 
 
-```
-# Mergesort - MPI
-1.000 main
-├─ 1.000 comm
-│  ├─ 1.000 MPI_Barrier
-│  └─ 1.000 comm_large
-│     ├─ 1.000 MPI_Gather
-│     └─ 1.000 MPI_Scatter
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-27.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-28.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-29.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-30.png)
+##### Weak Scaling main
+For the main component, we can see that the data stayed mostly consistent across each of the different input sizes and remained constant throughout each increase in processors. 
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-31.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-32.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-33.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-34.png)
 
-#### 3b. Collect Metadata
+### CUDA
+I was not able to get my CUDA implementation of Sample Sort to work in time. I believe this was due to not being able to properly get the buckets to send and receive data across each of the BLOCKS in the kernel calls in order to properly parallelize the algorithm.
 
-Have the following `adiak` code in your programs to collect metadata:
-```
-adiak::init(NULL);
-adiak::launchdate();    // launch date of the job
-adiak::libraries();     // Libraries used
-adiak::cmdline();       // Command line used to launch the job
-adiak::clustername();   // Name of the cluster
-adiak::value("Algorithm", algorithm); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
-adiak::value("ProgrammingModel", programmingModel); // e.g., "MPI", "CUDA", "MPIwithCUDA"
-adiak::value("Datatype", datatype); // The datatype of input elements (e.g., double, int, float)
-adiak::value("SizeOfDatatype", sizeOfDatatype); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
-adiak::value("InputSize", inputSize); // The number of elements in input dataset (1000)
-adiak::value("InputType", inputType); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
-adiak::value("num_procs", num_procs); // The number of processors (MPI ranks)
-adiak::value("num_threads", num_threads); // The number of CUDA or OpenMP threads
-adiak::value("num_blocks", num_blocks); // The number of CUDA blocks 
-adiak::value("group_num", group_number); // The number of your group (integer, e.g., 1, 10)
-adiak::value("implementation_source", implementation_source) // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
-```
+## 5. Presentation
+Plots for the presentation should be as follows:
+- For each implementation:
+    - For each of comp_large, comm, and main:
+        - Strong scaling plots for each InputSize with lines for InputType (7 plots - 4 lines each)
+        - Strong scaling speedup plot for each InputType (4 plots)
+        - Weak scaling plots for each InputType (4 plots)
 
-They will show up in the `Thicket.metadata` if the caliper file is read into Thicket.
+Analyze these plots and choose a subset to present and explain in your presentation.
 
-**See the `Builds/` directory to find the correct Caliper configurations to get the above metrics for CUDA, MPI, or OpenMP programs.** They will show up in the `Thicket.dataframe` when the Caliper file is read into Thicket.
+## 6. Final Report
+Submit a zip named `TeamX.zip` where `X` is your team number. The zip should contain the following files:
+- Algorithms: Directory of source code of your algorithms.
+- Data: All `.cali` files used to generate the plots seperated by algorithm/implementation.
+- Jupyter notebook: The Jupyter notebook(s) used to generate the plots for the report.
+- Report.md
