@@ -178,7 +178,112 @@ turn in a Caliper file for each.
 - For this reason, we also do not have any caliper files at this time in our project
 
 ## Merge Sort Performance Evaluation
+### MPI Strong Scaling Analysis (main)
+![](plots/merge_sort/mergesort_mpi_strongscaling_main16.png)
+![](plots/merge_sort/mergesort_mpi_strongscaling_main24.png)
 
+#### Graph Overview
+These graphs represent the main region's average over different input types
+
+#### Trends
+As the number of processors increase the time decreases
+
+#### Interpretation
+This graph shows that the implementation of parallelism is correct as the time radically decreases when the number of processors increase. These graphs look similar to the comp region because the comp region is the region that takes the time to process. The different input types are all stacked together which indicates that the input type did not impact the time.
+
+### MPI Strong Scaling Analysis (comm)
+![](plots/merge_sort/mergesort_mpi_strongscaling_comm16.png)
+![](plots/merge_sort/mergesort_mpi_strongscaling_comm24.png)
+
+#### Graph Overview
+These graphs represent the comm region's average over different input types
+
+#### Trends
+As the number of processors increase the time decreases, except for when num_processors= 4.
+
+#### Interpretation
+This may be because of a unknown error in the implementation of the algorithm or there is inadequate scaling for that specific region, slightly decreasing the efficency for when the number of processors is 4.
+
+### CUDA Strong Scaling Analysis (main)
+![](plots/merge_sort/mergesort_cuda_strongscaling_main16.png)
+![](plots/merge_sort/mergesort_cuda_strongscaling_main32.png)
+
+#### Graph Overview
+These graphs represent the main region's average over different input types
+
+#### Trends
+As the number of threads increase the overall time remains the same for each input type
+
+#### Interpretation
+These graphs show that the CUDA implementation of merge sort was most likely not implemented correctly as the GPU threads did not speedup the overall program. This may be because the algorithm was implemented, all blocks were communicated to CPU instead of the GPU, rendering extra threads useless. This was not discovered until after the tests were completed.
+
+### CUDA Strong Scaling Analysis (comm)
+![](plots/merge_sort/mergesort_cuda_strongscaling_comm16.png)
+![](plots/merge_sort/mergesort_cuda_strongscaling_comm32.png)
+
+#### Graph Overview
+These graphs represent the comm region's average over different input types
+
+#### Trends
+As the number of threads increase the overall time remains the same for each input type
+
+#### Interpretation
+Again, these graphs show that the CUDA implementation of merge sort was most likely not implemented correctly as the GPU threads did not speedup the overall program.
+
+### MPI Weak Scaling Analysis (main)
+![](plots/merge_sort/mergesort_mpi_weakscaling_main_rand.png)
+![](plots/merge_sort/mergesort_mpi_weakscaling_main_sort.png)
+
+#### Graph Overview
+These graphs represent the main region's average over different input sizes and input types
+
+#### Trends
+As the number of threads increase the overall time remains the same for each input size
+
+#### Interpretation
+This graph shows that the implementation of parallelism is correct as the time radically decreases when the number of processors increase. These graphs look similar to the comp region because the comp region is the region that takes the time to process.The different input sizes seem to converge as the number of processors increase, indicating resource efficency when increasing processors.
+
+### MPI Weak Scaling Analysis (comm)
+![](plots/merge_sort/mergesort_mpi_weakscaling_comm_rand.png)
+![](plots/merge_sort/mergesort_mpi_weakscaling_comm_sort.png)
+
+#### Graph Overview
+These graphs represent the comm region's average over different input sizes and input types
+
+#### Trends
+As the number of processors increase the overall time decreases, except for when num_processors= 4
+
+#### Interpretation
+This may be because of a unknown error in the implementation of the algorithm or there is inadequate scaling for that specific region, slightly decreasing the efficency for when the number of processors is 4.
+
+### CUDA Weak Scaling Analysis (main)
+![](plots/merge_sort/mergesort_cuda_weakscaling_main_rand.png)
+![](plots/merge_sort/mergesort_cuda_weakscaling_main_sort.png)
+
+#### Graph Overview
+These graphs represent the main region's average over different input sizes and input types
+
+#### Trends
+As the number of threads increase the overall time remains the same for each input size
+
+#### Interpretation
+Again, these graphs show that the CUDA implementation of merge sort was most likely not implemented correctly as the GPU threads did not speedup the overall program. Proper implementation should have shown that the time should decrease as the number of threads increase. The graphs look the same for comm.
+
+### CUDA Weak Scaling Analysis (comp)
+![](plots/merge_sort/mergesort_cuda_weakscaling_comp_rand.png)
+![](plots/merge_sort/mergesort_cuda_weakscaling_comp_sort.png)
+
+#### Graph Overview
+These graphs represent the comp region's average over different input sizes and input types
+
+#### Trends
+As the number of threads increase the overall time is random at first then decreases as the number of threads increase
+
+#### Interpretation
+Again, these graphs show that the CUDA implementation of merge sort was most likely not implemented correctly as this specific region had a very tiny y-axis range (0-0.00014), indicating that the code executed in this region was most likely not properly utilized.
+
+#### Note:
+All plots for merge sort are located in the merge_sort notebooks for input sizes (2^16, 2^18, 2^20, 2^22, 2^24), processor/thread sizes (2, 4, 8, 16, 32) and input types (random, sorted, reverse sorted, 1% perturbed)
 
 ## Bubble Sort Performance Evaluation
 ### Algorithm Description
