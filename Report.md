@@ -342,53 +342,53 @@ Include figures and explanation of your analysis.
   ##### Strong Scaling comp_large 
   For the comp_large component, for most of the input sizes, the graphs show that as the number of processes increased, the computation decreased which is pretty normal. On some of the graphs, they look all over the place because I was not able to get certain runs to work and that is visible in the first plot alone. 
 
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-2.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-3.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-4.png)
-![Strong Scaling](imagesforreport/../../.vscode/imagesforreport/image.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-6.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-7.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-8.png)
+![Alt text](plots/imagesforreport/image-2.png)
+![Alt text](plots/imagesforreport//image-3.png)
+![Alt text](plots/imagesforreport//image-4.png)
+![Strong Scaling](plots/imagesforreport//image.png)
+![Alt text](plots/imagesforreport//image-6.png)
+![Alt text](plots/imagesforreport//image-7.png)
+![Alt text](plots/imagesforreport//image-8.png)
   ##### Strong Scaling comm
   For the comm component, most of the graphs show that as the number of processes increased, the communication also increased and this is normal because there is more processes to communicate between. The graph for input size 2^28 shows communication increase and then decrease and this is because I was not able to get the runs at the last two processes sizes and again, I think this was due to memory issues in the logic of my code. 
 
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-9.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-11.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-13.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-15.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-17.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-19.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-21.png)
+![Alt text](plots/imagesforreport//image-9.png)
+![Alt text](plots/imagesforreport//image-11.png)
+![Alt text](plots/imagesforreport//image-13.png)
+![Alt text](plots/imagesforreport//image-15.png)
+![Alt text](plots/imagesforreport//image-17.png)
+![Alt text](plots/imagesforreport//image-19.png)
+![Alt text](plots/imagesforreport//image-21.png)
   ##### Strong Scaling main
 For the main plots, we can see that a lot of the time was taken at the beginning and at the end for various plots and this was due to the data initialization and the correctness check being the key factors in this. We can also see that for the most part, the time each of the input types took up remained constant throughout the runs, with Sorted being the fastest and 1%perturbed being the slowest.
 
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-10.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-12.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-14.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-16.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-18.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-20.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-22.png)
+![Alt text](plots/imagesforreport//image-10.png)
+![Alt text](plots/imagesforreport//image-12.png)
+![Alt text](plots/imagesforreport//image-14.png)
+![Alt text](plots/imagesforreport//image-16.png)
+![Alt text](plots/imagesforreport//image-18.png)
+![Alt text](plots/imagesforreport//image-20.png)
+![Alt text](plots/imagesforreport//image-22.png)
 ##### Weak Scaling comp_large
 For the weak scaling comp_large components, the graphs show that the computation decreased with each increase in the number of processors and also with the input size.
 
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-23.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-24.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-25.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-26.png)
+![Alt text](plots/imagesforreport//image-23.png)
+![Alt text](plots/imagesforreport//image-24.png)
+![Alt text](plots/imagesforreport//image-25.png)
+![Alt text](plots/imagesforreport//image-26.png)
 ##### Weak Scaling comm
 For the comm component, we can see that the communication increased with both the number of processors and the input size. The highest input size 2^28 gave the most outliers in the data. 
 
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-27.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-28.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-29.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-30.png)
+![Alt text](plots/imagesforreport//image-27.png)
+![Alt text](plots/imagesforreport//image-28.png)
+![Alt text](plots/imagesforreport//image-29.png)
+![Alt text](plots/imagesforreport//image-30.png)
 ##### Weak Scaling main
 For the main component, we can see that the data stayed mostly consistent across each of the different input sizes and remained constant throughout each increase in processors. 
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-31.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-32.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-33.png)
-![Alt text](imagesforreport/../../.vscode/imagesforreport/image-34.png)
+![Alt text](plots/imagesforreport//image-31.png)
+![Alt text](plots/imagesforreport//image-32.png)
+![Alt text](plots/imagesforreport//image-33.png)
+![Alt text](plots/imagesforreport//image-34.png)
 
 ### CUDA
 I was not able to get my CUDA implementation of Sample Sort to work in time. I believe this was due to not being able to properly get the buckets to send and receive data across each of the BLOCKS in the kernel calls in order to properly parallelize the algorithm.
