@@ -153,8 +153,9 @@ Sample Sort Pseudocode:
     - MPI and CUDA: use quicksort to sort the local data on each process
     - CUDA calls quicksort in each kernel
 6. Merge the data from each process
-  - MPI: MPI_Allgather
-  - CUDA: cudaMemcpy
+     - MPI: MPI_Allgather
+     - CUDA: cudaMemcpy
+  
 Citation: https://en.wikipedia.org/wiki/Samplesort
 
 ### 2c. Evaluation plan - what and how will you measure and compare
@@ -222,3 +223,84 @@ for different implementations in MPI and CUDA.
 ### Figures
 There are currently no figures for the sample sort algorithm
 
+## 4. Performance evaluation
+
+Include detailed analysis of computation performance, communication performance. 
+Include figures and explanation of your analysis.
+
+### Sample Sort Performance Analysis
+  #### MPI
+  For the MPI implementation of Sample Sort I was able to run it with 2 processes up to 1024 processes. I was also able to run it at all of the different input sizes that ranged from 2^16 to 2^28. However, some of the sizes such as 2^16 did not want to work for some reason at a certain number of processes and with different input types. I think this might have been due to my code implementation. Furthermore, the highest size 2^28 did not want to work either at the higher number of processes and I noticed that I would often have to increase the memory size of the nodes in the job files. I believe this was due to how I implemented the Sample Sort logic of creating the buckets which I did for every single process with the same size. Thus, this could explain that sometimes, when a process had more values that fell into its bucket, it might not complete because its bucket needed more memory. 
+
+  When I went to do the Jupyter plots using the cali files, I had not realized that my inputType variable had not been reading properly into the adiak caliper readings. Therefore, I decided to use Excel to create the graphs. I was only able to do Weak and Strong scaling plots for the comp_large, comm, and main average times. 
+
+  ##### Strong Scaling comp_large 
+  For the comp_large component, for most of the input sizes, the graphs show that as the number of processes increased, the computation decreased which is pretty normal. On some of the graphs, they look all over the place because I was not able to get certain runs to work and that is visible in the first plot alone. 
+
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-2.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-3.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-4.png)
+![Strong Scaling](imagesforreport/../../.vscode/imagesforreport/image.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-6.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-7.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-8.png)
+  ##### Strong Scaling comm
+  For the comm component, most of the graphs show that as the number of processes increased, the communication also increased and this is normal because there is more processes to communicate between. The graph for input size 2^28 shows communication increase and then decrease and this is because I was not able to get the runs at the last two processes sizes and again, I think this was due to memory issues in the logic of my code. 
+
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-9.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-11.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-13.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-15.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-17.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-19.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-21.png)
+  ##### Strong Scaling main
+For the main plots, we can see that a lot of the time was taken at the beginning and at the end for various plots and this was due to the data initialization and the correctness check being the key factors in this. We can also see that for the most part, the time each of the input types took up remained constant throughout the runs, with Sorted being the fastest and 1%perturbed being the slowest.
+
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-10.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-12.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-14.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-16.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-18.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-20.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-22.png)
+##### Weak Scaling comp_large
+For the weak scaling comp_large components, the graphs show that the computation decreased with each increase in the number of processors and also with the input size.
+
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-23.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-24.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-25.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-26.png)
+##### Weak Scaling comm
+For the comm component, we can see that the communication increased with both the number of processors and the input size. The highest input size 2^28 gave the most outliers in the data. 
+
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-27.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-28.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-29.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-30.png)
+##### Weak Scaling main
+For the main component, we can see that the data stayed mostly consistent across each of the different input sizes and remained constant throughout each increase in processors. 
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-31.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-32.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-33.png)
+![Alt text](imagesforreport/../../.vscode/imagesforreport/image-34.png)
+
+### CUDA
+I was not able to get my CUDA implementation of Sample Sort to work in time. I believe this was due to not being able to properly get the buckets to send and receive data across each of the BLOCKS in the kernel calls in order to properly parallelize the algorithm.
+
+## 5. Presentation
+Plots for the presentation should be as follows:
+- For each implementation:
+    - For each of comp_large, comm, and main:
+        - Strong scaling plots for each InputSize with lines for InputType (7 plots - 4 lines each)
+        - Strong scaling speedup plot for each InputType (4 plots)
+        - Weak scaling plots for each InputType (4 plots)
+
+Analyze these plots and choose a subset to present and explain in your presentation.
+
+## 6. Final Report
+Submit a zip named `TeamX.zip` where `X` is your team number. The zip should contain the following files:
+- Algorithms: Directory of source code of your algorithms.
+- Data: All `.cali` files used to generate the plots seperated by algorithm/implementation.
+- Jupyter notebook: The Jupyter notebook(s) used to generate the plots for the report.
+- Report.md
